@@ -6,16 +6,11 @@ AI-Orchestra 测试脚本
 
 import asyncio
 import sys
-from pathlib import Path
 
-# 添加项目路径
-sys.path.append(str(Path(__file__).parent / "core"))
-sys.path.append(str(Path(__file__).parent / "logic"))
-
-from base_agent import MockAgent, PersonalityType
-from orchestrator import HierarchyMode, CreativeWritingMode
-from werewolf_engine import WerewolfEngine, Role, GamePhase
-from script_kill_engine import ScriptKillEngine, ScriptGenre, GamePhase as SKPhase
+from core.base_agent import MockAgent, PersonalityType
+from logic.orchestrator import HierarchyMode, CreativeWritingMode
+from logic.werewolf_engine import WerewolfEngine, Role, GamePhase
+from logic.script_kill_engine import ScriptKillEngine, ScriptGenre, GamePhase as SKPhase
 
 print("=" * 60)
 print("🎭 AI-Orchestra 功能测试")

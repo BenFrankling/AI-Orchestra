@@ -1,0 +1,95 @@
+# AI-Orchestra Configuration
+# 复制此文件为 config.yaml 并填入你的API Key
+
+# OpenAI兼容接口配置（适用于DeepSeek/豆包/千问/Kimi/GPT-4/腾讯混元等）
+api_keys:
+  deepseek:
+    api_key: "sk-your-deepseek-key"
+    base_url: "https://api.deepseek.com/v1"
+    model: "deepseek-chat"
+
+  doubao:
+    api_key: "your-doubao-key"
+    base_url: "https://ark.cn-beijing.volces.com/api/v3"
+    model: "ep-2025xxxxxx"
+
+  qwen:
+    api_key: "your-qwen-key"
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: "qwen-max"
+
+  yuanbao:
+    api_key: "your-hunyuan-key"
+    base_url: "https://hunyuan.tencentcloudapi.com"
+    model: "hunyuan-pro"
+
+  kimi:
+    api_key: "your-moonshot-key"
+    base_url: "https://api.moonshot.cn/v1"
+    model: "moonshot-v1-8k"
+
+  gpt4:
+    api_key: "your-openai-key"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4"
+
+  claude:
+    api_key: "your-anthropic-key"
+    base_url: "https://api.anthropic.com/v1"
+    model: "claude-3-opus-20240229"
+
+# 角色配置
+hierarchy_mode:
+  students:
+    - deepseek
+    - doubao
+    - qwen
+    - yuanbao
+    - kimi
+    - gpt4
+  teachers:
+    - claude
+    - qwen
+    - deepseek
+  principal:
+    - claude
+
+werewolf_mode:
+  total_players: 10
+  roles:
+    judge: claude
+    werewolf_1: deepseek
+    werewolf_2: doubao
+    prophet: qwen
+    witch: yuanbao
+    civilian_1: kimi
+    civilian_2: gpt4
+    civilian_3: claude
+    civilian_4: deepseek
+    civilian_5: doubao
+
+# 性格配置
+personalities:
+  aggressive:
+    traits: ["直接", "批判性", "简短有力"]
+    speak_style: " aggressive"
+  cautious:
+    traits: ["谨慎", "周全", "留有余地"]
+    speak_style: " cautious"
+  humorous:
+    traits: ["幽默", "轻松", "善于比喻"]
+    speak_style: " humorous"
+  analytical:
+    traits: ["严谨", "结构化", "数据驱动"]
+    speak_style: " analytical"
+  mediator:
+    traits: ["温和", "平衡", "求同存异"]
+    speak_style: " mediator"
+
+# 全局设置
+settings:
+  mock_mode: true
+  max_tokens: 2048
+  temperature: 0.7
+  request_timeout: 30
+  parallel_requests: true

@@ -1,6 +1,6 @@
 """
 AI-Orchestra: 统一AI代理基类
-支持多种大模型API接口，包含模拟模式
+支持多种大模型API接口（OpenAI兼容格式），包含模拟模式
 """
 
 import asyncio
@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Any
 from enum import Enum
 
+
 class PersonalityType(Enum):
     """AI性格类型"""
     AGGRESSIVE = "aggressive"
@@ -18,12 +19,13 @@ class PersonalityType(Enum):
     ANALYTICAL = "analytical"
     MEDIATOR = "mediator"
 
+
 class BaseAgent(ABC):
     """
     AI代理基类
     所有具体AI实现都需要继承此类
     """
-    
+
     def __init__(self, name: str, api_key: str = "", base_url: str = "", model: str = "",
                  mock_mode: bool = True, personality: Optional[PersonalityType] = None):
         self.name = name
@@ -33,16 +35,16 @@ class BaseAgent(ABC):
         self.mock_mode = mock_mode
         self.personality = personality or random.choice(list(PersonalityType))
         self.history: List[Dict[str, str]] = []
-        
+
     @abstractmethod
     async def generate(self, prompt: str, context: Optional[List[Dict]] = None) -> str:
         """生成回复的抽象方法"""
         pass
-    
+
     def add_to_history(self, role: str, content: str):
         """添加对话历史"""
         self.history.append({"role": role, "content": content, "timestamp": time.time()})
-        
+
     def clear_history(self):
         """清空历史"""
         self.history = []
@@ -53,8 +55,7 @@ class MockAgent(BaseAgent):
     模拟AI代理 - 用于无API Key测试
     根据性格类型生成不同风格的回复
     """
-    
-    # 性格特定的回复模板
+
     PERSONA_TEMPLATES = {
         PersonalityType.AGGRESSIVE: {
             "prefixes": ["不对，", "错！", "实际的情况是：", "你需要理解的是："],
@@ -82,8 +83,7 @@ class MockAgent(BaseAgent):
             "style": "温和、平衡、求同存异"
         }
     }
-    
-    # 角色特定的内容模板
+
     ROLE_TEMPLATES = {
         "student": {
             "deepseek": "作为DeepSeek，我认为{topic}的关键在于{point1}和{point2}。具体来说...",
@@ -111,51 +111,39 @@ class MockAgent(BaseAgent):
             "judge": "天黑请闭眼...天亮请睁眼，昨晚{result}"
         }
     }
-    
+
     def __init__(self, name: str, personality: Optional[PersonalityType] = None, role: str = "general"):
         super().__init__(name=name, mock_mode=True, personality=personality)
         self.role = role
-        
+
     async def generate(self, prompt: str, context: Optional[List[Dict]] = None) -> str:
-        """
-        模拟生成回复
-        添加随机延迟模拟真实API响应
-        """
-        # 模拟网络延迟 0.5-2秒
+        """模拟生成回复，添加随机延迟模拟真实API响应"""
         await asyncio.sleep(random.uniform(0.5, 2.0))
-        
         persona = self.PERSONA_TEMPLATES[self.personality]
-        
-        # 根据角色和提示生成回复
         response = self._generate_by_role(prompt, persona)
-        
         self.add_to_history("assistant", response)
         return response
-    
+
     def _generate_by_role(self, prompt: str, persona: Dict) -> str:
         """根据角色生成特定风格的回复"""
         prefix = random.choice(persona["prefixes"])
         suffix = random.choice(persona["suffixes"])
-        
-        # 提取关键词（简化处理）
         keywords = prompt[:30] if len(prompt) > 30 else prompt
-        
+
         if "evaluate" in prompt.lower() or "评分" in prompt:
-            # 老师评价模式
             student = random.choice(["学生A", "学生B", "DeepSeek", "豆包", "千问"])
             score = random.randint(70, 95)
             comments = {
-                PersonalityType.AGGRESSIVE: f"逻辑尚可，但论据不够硬核，应该补充更多实证数据。",
-                PersonalityType.CAUTIOUS: f"观点有一定道理，但需要更多验证，建议参考多方面资料。",
-                PersonalityType.HUMOROUS: f"回答挺有趣的，像讲故事一样，不过内容质量还有提升空间。",
+                PersonalityType.AGGRESSIVE: "逻辑尚可，但论据不够硬核，应该补充更多实证数据。",
+                PersonalityType.CAUTIOUS: "观点有一定道理，但需要更多验证，建议参考多方面资料。",
+                PersonalityType.HUMOROUS: "回答挺有趣的，像讲故事一样，不过内容质量还有提升空间。",
                 PersonalityType.ANALYTICAL: f"结构清晰，论据充分，得分为{score}分。",
-                PersonalityType.MEDIATOR: f"回答平衡客观，综合考虑了多个角度，值得肯定。"
+                PersonalityType.MEDIATOR: "回答平衡客观，综合考虑了多个角度，值得肯定。"
             }
             comment = comments[self.personality]
             return f"{prefix}对{student}的回答评价：{score}/100分。{comment} {suffix}"
-        
+
         elif "conclusion" in prompt.lower() or "结论" in prompt or "总结" in prompt:
-            # 校长决策模式
             conclusions = {
                 PersonalityType.AGGRESSIVE: f"经过分析，{keywords}的核心答案是X。其他观点都有明显漏洞。",
                 PersonalityType.CAUTIOUS: f"综合考虑，{keywords}最可能的解释是X，但也不排除Y的可能性。",
@@ -164,12 +152,10 @@ class MockAgent(BaseAgent):
                 PersonalityType.MEDIATOR: f"综合各方意见，{keywords}的共识答案是X，同时需要关注Y的合理因素。"
             }
             return f"{prefix}{conclusions[self.personality]} {suffix}"
-        
+
         else:
-            # 学生回答模式
             points = ["理论层面", "实践应用", "历史案例", "未来趋势", "技术细节", "社会影响"]
             selected = random.sample(points, 3)
-            
             responses = {
                 PersonalityType.AGGRESSIVE: f"关于{keywords}，关键就是{selected[0]}和{selected[1]}。其他都是次要的。",
                 PersonalityType.CAUTIOUS: f"从{selected[0]}和{selected[1]}的角度看，{keywords}可能有几种解释...",
@@ -180,108 +166,110 @@ class MockAgent(BaseAgent):
             return f"{prefix}{responses[self.personality]} {suffix}"
 
 
-class DeepSeekAgent(BaseAgent):
-    """DeepSeek API代理"""
-    
+class OpenAICompatibleAgent(BaseAgent):
+    """
+    支持OpenAI兼容接口的真实API代理
+    适用于：DeepSeek、豆包、通义千问、Kimi、GPT-4、腾讯混元等
+    """
+
+    PERSONALITY_SYSTEM_PROMPTS = {
+        PersonalityType.AGGRESSIVE: "你说话直接、简短有力，喜欢一针见血地指出问题，不拐弯抹角。",
+        PersonalityType.CAUTIOUS: "你说话谨慎周全，总是留有余地，不轻易下绝对结论，喜欢用'可能'、'也许'。",
+        PersonalityType.HUMOROUS: "你说话幽默风趣，善用比喻和段子，风格轻松活泼，偶尔会开开玩笑。",
+        PersonalityType.ANALYTICAL: "你说话严谨结构化，喜欢列提纲、分点论述，注重数据和逻辑。",
+        PersonalityType.MEDIATOR: "你说话温和平衡，倾向于求同存异，善于整合不同观点，寻找共识。",
+    }
+
+    def __init__(self, name: str, api_key: str = "", base_url: str = "", model: str = "",
+                 mock_mode: bool = True, personality: Optional[PersonalityType] = None):
+        super().__init__(name, api_key, base_url, model, mock_mode, personality)
+        self._client = None
+        if not mock_mode and api_key and base_url:
+            try:
+                import httpx
+                self._client = httpx.AsyncClient(
+                    base_url=base_url.rstrip("/"),
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    timeout=60.0,
+                )
+            except ImportError:
+                pass
+
     async def generate(self, prompt: str, context: Optional[List[Dict]] = None) -> str:
-        if self.mock_mode:
+        if self.mock_mode or not self._client:
             mock = MockAgent(self.name, self.personality, "student")
             return await mock.generate(prompt, context)
-        # TODO: 实现真实API调用
-        return "[DeepSeek Real API - Not Implemented]"
+
+        messages = self._build_messages(prompt, context)
+
+        try:
+            import httpx
+            response = await self._client.post(
+                "/chat/completions",
+                json={
+                    "model": self.model,
+                    "messages": messages,
+                    "max_tokens": 2048,
+                    "temperature": 0.7,
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            content = data["choices"][0]["message"]["content"]
+            self.add_to_history("assistant", content)
+            return content
+        except httpx.TimeoutException:
+            return f"[{self.name}] 请求超时，请检查网络连接或API服务状态。"
+        except httpx.HTTPStatusError as e:
+            detail = e.response.text[:300]
+            return f"[{self.name}] API请求失败 ({e.response.status_code}): {detail}"
+        except Exception as e:
+            return f"[{self.name}] 发生错误: {type(e).__name__}: {str(e)}"
+
+    def _build_messages(self, prompt: str, context: Optional[List[Dict]]) -> List[Dict[str, str]]:
+        """构建OpenAI格式的消息列表"""
+        system_prompt = f"你是{self.name}。"
+        personality_desc = self.PERSONALITY_SYSTEM_PROMPTS.get(self.personality, "")
+        if personality_desc:
+            system_prompt += personality_desc
+
+        messages = [{"role": "system", "content": system_prompt}]
+
+        if context:
+            for msg in context:
+                role = msg.get("role", "user")
+                if role in ("user", "assistant", "system"):
+                    messages.append({"role": role, "content": msg.get("content", "")})
+
+        messages.append({"role": "user", "content": prompt})
+        return messages
+
+    async def close(self):
+        """关闭HTTP客户端"""
+        if self._client:
+            await self._client.aclose()
 
 
-class DoubaoAgent(BaseAgent):
-    """豆包/火山引擎 API代理"""
-    
-    async def generate(self, prompt: str, context: Optional[List[Dict]] = None) -> str:
-        if self.mock_mode:
-            mock = MockAgent(self.name, self.personality, "student")
-            return await mock.generate(prompt, context)
-        return "[Doubao Real API - Not Implemented]"
-
-
-class QwenAgent(BaseAgent):
-    """通义千问 API代理"""
-    
-    async def generate(self, prompt: str, context: Optional[List[Dict]] = None) -> str:
-        if self.mock_mode:
-            mock = MockAgent(self.name, self.personality, "student")
-            return await mock.generate(prompt, context)
-        return "[Qwen Real API - Not Implemented]"
-
-
-class YuanbaoAgent(BaseAgent):
-    """腾讯元宝/混元 API代理"""
-    
-    async def generate(self, prompt: str, context: Optional[List[Dict]] = None) -> str:
-        if self.mock_mode:
-            mock = MockAgent(self.name, self.personality, "student")
-            return await mock.generate(prompt, context)
-        return "[Yuanbao Real API - Not Implemented]"
-
-
-class KimiAgent(BaseAgent):
-    """Moonshot Kimi API代理"""
-    
-    async def generate(self, prompt: str, context: Optional[List[Dict]] = None) -> str:
-        if self.mock_mode:
-            mock = MockAgent(self.name, self.personality, "student")
-            return await mock.generate(prompt, context)
-        return "[Kimi Real API - Not Implemented]"
-
-
-class GPT4Agent(BaseAgent):
-    """OpenAI GPT-4 API代理"""
-    
-    async def generate(self, prompt: str, context: Optional[List[Dict]] = None) -> str:
-        if self.mock_mode:
-            mock = MockAgent(self.name, self.personality, "student")
-            return await mock.generate(prompt, context)
-        return "[GPT-4 Real API - Not Implemented]"
-
-
-class ClaudeAgent(BaseAgent):
-    """Anthropic Claude API代理"""
-    
-    async def generate(self, prompt: str, context: Optional[List[Dict]] = None) -> str:
-        if self.mock_mode:
-            mock = MockAgent(self.name, self.personality, "teacher")
-            return await mock.generate(prompt, context)
-        return "[Claude Real API - Not Implemented]"
+class ClaudeAgent(OpenAICompatibleAgent):
+    """
+    Anthropic Claude API代理
+    Claude也支持OpenAI兼容接口，此处保留独立类以便未来扩展原生SDK支持
+    """
+    pass
 
 
 def create_agent(name: str, config: Dict, mock_mode: bool = True) -> BaseAgent:
     """
     工厂函数：根据配置创建对应的AI代理
-    
-    Args:
-        name: AI名称 (deepseek, doubao, qwen等)
-        config: API配置字典
-        mock_mode: 是否使用模拟模式
-    
-    Returns:
-        BaseAgent实例
+    所有OpenAI兼容接口统一使用 OpenAICompatibleAgent
     """
-    agent_map = {
-        "deepseek": DeepSeekAgent,
-        "doubao": DoubaoAgent,
-        "qwen": QwenAgent,
-        "yuanbao": YuanbaoAgent,
-        "kimi": KimiAgent,
-        "gpt4": GPT4Agent,
-        "claude": ClaudeAgent
-    }
-    
-    agent_class = agent_map.get(name.lower(), MockAgent)
-    
     if mock_mode:
-        return agent_class(name=name, mock_mode=True)
-    
-    return agent_class(
+        return OpenAICompatibleAgent(name=name, mock_mode=True)
+
+    return OpenAICompatibleAgent(
         name=name,
         api_key=config.get("api_key", ""),
         base_url=config.get("base_url", ""),
         model=config.get("model", ""),
-        mock_mode=False
+        mock_mode=False,
     )

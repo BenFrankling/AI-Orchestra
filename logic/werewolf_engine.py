@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import Enum
 import json
 
-from base_agent import MockAgent, PersonalityType
+from core.base_agent import MockAgent, PersonalityType
 
 
 class Role(Enum):

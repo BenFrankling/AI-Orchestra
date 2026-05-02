@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
-from base_agent import MockAgent, PersonalityType
+from core.base_agent import MockAgent, PersonalityType
 
 
 class ScriptGenre(Enum):

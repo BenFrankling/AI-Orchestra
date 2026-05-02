@@ -5,19 +5,18 @@ Mac用户可以直接运行: streamlit run ui/app.py
 
 import streamlit as st
 import asyncio
-import sys
-from pathlib import Path
 from datetime import datetime
 
-# 添加项目路径
-sys.path.append(str(Path(__file__).parent.parent / "core"))
-sys.path.append(str(Path(__file__).parent.parent / "logic"))
+from core.base_agent import MockAgent, PersonalityType, create_agent
+from logic.orchestrator import HierarchyMode, CreativeWritingMode
+from logic.werewolf_engine import WerewolfEngine, Role, GamePhase, Team
+from logic.script_kill_engine import ScriptKillEngine, ScriptGenre, Script, SCRIPTS_LIBRARY
+from logic.memory_system import MemoryManager, MemoryEnhancedAgent
 
-from base_agent import MockAgent, PersonalityType, create_agent
-from orchestrator import HierarchyMode, CreativeWritingMode
-from werewolf_engine import WerewolfEngine, Role, GamePhase, Team
-from script_kill_engine import ScriptKillEngine, ScriptGenre, Script, SCRIPTS_LIBRARY
-from memory_system import MemoryManager, MemoryEnhancedAgent
+
+def run_sync(coro):
+    """同步运行异步协程的辅助函数"""
+    return asyncio.run(coro)
 
 # 页面配置
 st.set_page_config(
@@ -152,9 +151,7 @@ if mode == "三级决策模式":
                         st.success("✅ 协作完成！")
             
             # 运行
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            results = loop.run_until_complete(
+            results = run_sync(
                 hierarchy.execute(question, progress_callback)
             )
             
@@ -278,9 +275,7 @@ elif mode == "文学创作模式":
                 progress_placeholder.info(f"⏳ {message}")
             
             # 运行创作
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            results = loop.run_until_complete(
+            results = run_sync(
                 creative.create_content(
                     type_map[content_type],
                     topic,
@@ -375,9 +370,7 @@ elif mode == "AI大乱斗(狼人杀)":
             if not st.session_state.werewolf_game.game_over:
                 if st.button("⏭️ 进行下一轮", type="secondary"):
                     with st.spinner("AI正在思考和行动..."):
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                        loop.run_until_complete(
+                        run_sync(
                             st.session_state.werewolf_game.play_round()
                         )
                     st.rerun()
@@ -578,9 +571,7 @@ elif mode == "剧本杀":
                 with cols[i % 3]:
                     if st.button(f"📍 {location}", key=f"loc_{location}"):
                         with st.spinner(f"正在{location}搜索..."):
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
-                            clue = loop.run_until_complete(
+                            clue = run_sync(
                                 engine.search_clue(st.session_state.player_role, location)
                             )
                             if clue:
@@ -614,12 +605,9 @@ elif mode == "剧本杀":
             
             if st.button("🎤 发言"):
                 with st.spinner("AI正在思考..."):
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    
                     # 每个角色发言
                     for role_name, agent in list(engine.players.items())[:4]:  # 限制显示4个
-                        response = loop.run_until_complete(
+                        response = run_sync(
                             engine.discuss(role_name, selected_topic)
                         )
                         
@@ -899,4 +887,4 @@ api_keys:
 
 # 页脚
 st.divider()
-st.markdown("<p style='text-align: center; color: #999;'>AI-Orchestra v0.2.0 | 多AI协作引擎</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #999;'>AI-Orchestra v0.2.1 | 多AI协作引擎</p>", unsafe_allow_html=True)

@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime
 from pathlib import Path
 
-from base_agent import BaseAgent, MockAgent, PersonalityType, create_agent
+from core.base_agent import BaseAgent, MockAgent, PersonalityType, create_agent
 
 
 class HierarchyMode:

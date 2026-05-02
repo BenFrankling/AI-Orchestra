@@ -168,4 +168,4 @@ AI-Orchestra/
 
 ---
 
-**AI-Orchestra v0.1.0** | 让AI协作，获得更好的答案
+**AI-Orchestra v0.2.1** | 让AI协作，获得更好的答案
